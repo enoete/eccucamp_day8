@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 8: Audio Storyboard & Sound Creation Workshop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .presentation-container {
+            height: 100vh;
+            position: relative;
+        }
+
+        .slide {
+            display: none;
+            height: 100vh;
+            padding: 40px;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            flex-direction: column;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        .slide h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .slide h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #4ecdc4;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }
+
+        .slide h3 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: #ffe066;
+            animation: fadeInUp 1s ease-out 0.4s both;
+        }
+
+        .slide p {
+            font-size: 1.3rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            max-width: 900px;
+            animation: fadeInUp 1s ease-out 0.6s both;
+        }
+
+        .slide ul {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            text-align: left;
+            max-width: 800px;
+            animation: fadeInUp 1s ease-out 0.8s both;
+        }
+
+        .slide li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .slide li:before {
+            content: "🎵";
+            position: absolute;
+            left: 0;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 1000;
+            background: rgba(0,0,0,0.6);
+            padding: 15px 30px;
+            border-radius: 40px;
+            backdrop-filter: blur(15px);
+        }
+
+        .nav-controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .slide-grid {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .slide-dot {
+            width: 35px;
+            height: 35px;
+            background: rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.4);
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .slide-dot:hover {
+            background: rgba(255,255,255,0.5);
+            border-color: rgba(255,255,255,0.7);
+            transform: translateY(-2px);
+        }
+
+        .slide-dot.active {
+            background: rgba(255,165,0,0.8);
+            border-color: rgba(255,165,0,1);
+            color: white;
+            font-weight: bold;
+        }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.4);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .slide-counter {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(0,0,0,0.3);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 1rem;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+
+        .time-indicator {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            background: rgba(0,0,0,0.3);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 1rem;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .morning-box {
+            background: rgba(78,205,196,0.1);
+            border: 2px solid rgba(78,205,196,0.3);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 1s ease-out 1s both;
+        }
+
+        .afternoon-box {
+            background: linear-gradient(45deg, rgba(255,224,102,0.1), rgba(255,193,7,0.1));
+            border: 2px solid rgba(255,224,102,0.3);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 15px 0;
+            animation: fadeInUp 1s ease-out 1.2s both;
+        }
+
+        .activity-box {
+            background: linear-gradient(45deg, rgba(255,107,107,0.1), rgba(255,64,129,0.1));
+            border: 2px solid rgba(255,107,107,0.3);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 15px 0;
+            animation: fadeInUp 1s ease-out 1.4s both;
+        }
+
+        .workshop-title {
+            background: linear-gradient(45deg, #4ecdc4, #ffe066);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.8rem;
+            margin-bottom: 30px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4ecdc4, #ffe066);
+            transition: width 0.5s ease;
+        }
+
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .timeline-item {
+            text-align: center;
+            flex: 1;
+            padding: 15px;
+        }
+
+        .timeline-arrow {
+            color: #4ecdc4;
+            font-size: 2rem;
+            margin: 0 10px;
+        }
+
+        .platform-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+            animation: fadeInUp 1s ease-out 1.6s both;
+            max-width: 1200px;
+        }
+
+        .platform-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(5px);
+            transition: transform 0.3s ease;
+            border-left: 5px solid;
+        }
+
+        .platform-card.best {
+            border-left-color: #4caf50;
+        }
+
+        .platform-card.good {
+            border-left-color: #ff9800;
+        }
+
+        .platform-card.alternative {
+            border-left-color: #2196f3;
+        }
+
+        .platform-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .demo-code {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            text-align: left;
+            margin: 10px 0;
+            border-left: 4px solid #4ecdc4;
+        }
+
+        .audio-storyboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+            max-width: 900px;
+        }
+
+        .storyboard-panel {
+            background: rgba(255,255,255,0.1);
+            border: 2px dashed rgba(255,255,255,0.3);
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .sound-categories {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin: 20px 0;
+            max-width: 1000px;
+        }
+
+        .sound-category {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(5px);
+            border: 2px solid rgba(78,205,196,0.3);
+        }
+
+        .prompt-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+            max-width: 1000px;
+        }
+
+        .prompt-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: left;
+            backdrop-filter: blur(5px);
+            border: 2px solid rgba(255,224,102,0.3);
+        }
+
+        .difficulty-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .easy { background: #4caf50; color: white; }
+        .medium { background: #ff9800; color: white; }
+        .hard { background: #f44336; color: white; }
+    </style>
+</head>
+<body>
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="slide-counter" id="slideCounter">1 / 26</div>
+    <div class="time-indicator" id="timeIndicator">9:00 AM</div>
+
+    <div class="presentation-container">
+        <!-- Slide 1: Welcome -->
+        <div class="slide active">
+            <h1>Day 8: Audio Storyboard Creation</h1>
+            <h1 class="workshop-title">Sound Design & Musical Storytelling</h1>
+            <p>Creating the Perfect Audio Landscape for Your Cultural Story</p>
+            <div class="morning-box">
+                <h3>🎯 Today's Mission</h3>
+                <p>Design and create ALL the audio elements that will bring your cultural video to life!</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: Your Journey So Far -->
+        <div class="slide">
+            <h2>Your Creative Journey Update</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <h3>Days 1-2 ✅</h3>
+                    <p><strong>Visual Foundation</strong><br>Art & image creation</p>
+                </div>
+                <div class="timeline-arrow">→</div>
+                <div class="timeline-item">
+                    <h3>Days 3-4 ✅</h3>
+                    <p><strong>Video Creation</strong><br>AI-generated scenes</p>
+                </div>
+                <div class="timeline-arrow">→</div>
+                <div class="timeline-item">
+                    <h3>Days 5-7 ✅</h3>
+                    <p><strong>Visual Storyboard</strong><br>Complete scene planning</p>
+                </div>
+                <div class="timeline-arrow">→</div>
+                <div class="timeline-item">
+                    <h3>Day 8 🎯</h3>
+                    <p><strong>Audio Storyboard</strong><br>Sound design planning</p>
+                </div>
+            </div>
+            <div class="morning-box">
+                <p><strong>Today completes your audio blueprint!</strong> Every scene will have its perfect soundtrack</p>
+            </div>
+        </div>
+
+        <!-- Slide 3: Why Audio Storyboards Matter -->
+        <div class="slide">
+            <h2>Why Audio Storyboards Are Essential</h2>
+            <div class="sound-categories">
+                <div class="sound-category">
+                    <h3>🎬 Professional Filmmaking</h3>
+                    <p>Every Hollywood movie plans audio before filming. Sound drives 50% of emotional impact!</p>
+                </div>
+                <div class="sound-category">
+                    <h3>🧠 Psychological Impact</h3>
+                    <p>Music and sound effects trigger instant emotional responses and cultural memories</p>
+                </div>
+                <div class="sound-category">
+                    <h3>📖 Story Enhancement</h3>
+                    <p>Audio fills gaps that visuals can't - it conveys mood, pace, and cultural authenticity</p>
+                </div>
+                <div class="sound-category">
+                    <h3>🎯 Audience Engagement</h3>
+                    <p>Proper audio design keeps viewers engaged and creates memorable experiences</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Audio Storyboard Framework -->
+        <div class="slide">
+            <h2>Audio Storyboard Framework</h2>
+            <div class="audio-storyboard">
+                <div class="storyboard-panel">
+                    <strong>Scene Audio Planning</strong><br>
+                    What sounds belong in each scene?
+                </div>
+                <div class="storyboard-panel">
+                    <strong>Musical Themes</strong><br>
+                    What emotions and cultural elements?
+                </div>
+                <div class="storyboard-panel">
+                    <strong>Sound Effects Map</strong><br>
+                    Environmental and action sounds
+                </div>
+                <div class="storyboard-panel">
+                    <strong>Transition Audio</strong><br>
+                    How scenes flow musically together
+                </div>
+                <div class="storyboard-panel">
+                    <strong>Cultural Authenticity</strong><br>
+                    Traditional instruments and styles
+                </div>
+                <div class="storyboard-panel">
+                    <strong>Technical Specs</strong><br>
+                    Duration, volume, and timing notes
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Types of Audio You'll Create -->
+        <div class="slide">
+            <h2>Types of Audio You'll Create Today</h2>
+            <div class="platform-grid">
+                <div class="platform-card best">
+                    <h3>🎵 Background Music</h3>
+                    <p><strong>Purpose:</strong> Sets mood and cultural atmosphere<br>
+                    <strong>Duration:</strong> 30-60 seconds per track<br>
+                    <strong>Style:</strong> Caribbean, traditional, modern fusion</p>
+                </div>
+                <div class="platform-card best">
+                    <h3>🎭 Character Themes</h3>
+                    <p><strong>Purpose:</strong> Musical identity for Anansi, monkeys, etc.<br>
+                    <strong>Duration:</strong> 10-20 second loops<br>
+                    <strong>Style:</strong> Distinctive melodies for each character</p>
+                </div>
+                <div class="platform-card good">
+                    <h3>🌊 Environmental Sounds</h3>
+                    <p><strong>Purpose:</strong> Location authenticity and immersion<br>
+                    <strong>Examples:</strong> Ocean waves, forest sounds, marketplace<br>
+                    <strong>Style:</strong> Realistic and atmospheric</p>
+                </div>
+                <div class="platform-card good">
+                    <h3>⚡ Action Sounds</h3>
+                    <p><strong>Purpose:</strong> Scene transitions and dramatic moments<br>
+                    <strong>Examples:</strong> Footsteps, magic sounds, surprises<br>
+                    <strong>Style:</strong> Punchy and clear</p>
+                </div>
+                <div class="platform-card alternative">
+                    <h3>🎺 Cultural Music</h3>
+                    <p><strong>Purpose:</strong> Authentic heritage representation<br>
+                    <strong>Instruments:</strong> Steel pan, drums, traditional vocals<br>
+                    <strong>Style:</strong> Respectful and accurate</p>
+                </div>
+                <div class="platform-card alternative">
+                    <h3>🔄 Transition Sounds</h3>
+                    <p><strong>Purpose:</strong> Smooth scene-to-scene flow<br>
+                    <strong>Examples:</strong> Musical bridges, fade effects<br>
+                    <strong>Style:</strong> Seamless and professional</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Best AI Music Platforms -->
+        <div class="slide">
+            <h2>🥇 Best AI Music Platforms for Your Project</h2>
+            <div class="platform-grid">
+                <div class="platform-card best">
+                    <h3>🎵 Udio</h3>
+                    <p><strong>🆓 Free Plan:</strong> 1,200 generations monthly<br>
+                    <strong>💪 Best For:</strong> High-quality, realistic music<br>
+                    <strong>🎨 Styles:</strong> Excellent at Caribbean, world music<br>
+                    <strong>⭐ Why Choose:</strong> Professional sound quality</p>
+                </div>
+                <div class="platform-card best">
+                    <h3>🎛️ Mureka.ai</h3>
+                    <p><strong>🆓 Free Plan:</strong> 200 credits daily<br>
+                    <strong>💪 Best For:</strong> Customizable, layered compositions<br>
+                    <strong>🎨 Styles:</strong> Great control over instruments<br>
+                    <strong>⭐ Why Choose:</strong> Precise creative control</p>
+                </div>
+                <div class="platform-card good">
+                    <h3>🔥 Riffusion</h3>
+                    <p><strong>🆓 Free Plan:</strong> Unlimited with limits<br>
+                    <strong>💪 Best For:</strong> Quick musical sketches<br>
+                    <strong>🎨 Styles:</strong> Real-time music generation<br>
+                    <strong>⭐ Why Choose:</strong> Instant experimentation</p>
+                </div>
+                <div class="platform-card good">
+                    <h3>🎹 Suno AI</h3>
+                    <p><strong>🆓 Free Plan:</strong> 50 credits daily<br>
+                    <strong>💪 Best For:</strong> Complete songs with vocals<br>
+                    <strong>🎨 Styles:</strong> Full song structures<br>
+                    <strong>⭐ Why Choose:</strong> Vocal capabilities</p>
+                </div>
+                <div class="platform-card alternative">
+                    <h3>🎼 Soundraw</h3>
+                    <p><strong>🆓 Free Plan:</strong> Limited downloads<br>
+                    <strong>💪 Best For:</strong> Royalty-free background music<br>
+                    <strong>🎨 Styles:</strong> Mood-based creation<br>
+                    <strong>⭐ Why Choose:</strong> No copyright issues</p>
+                </div>
+                <div class="platform-card alternative">
+                    <h3>🎭 Beatoven.ai</h3>
+                    <p><strong>🆓 Free Plan:</strong> 15 minutes monthly<br>
+                    <strong>💪 Best For:</strong> Emotion-driven soundtracks<br>
+                    <strong>🎨 Styles:</strong> 16 different moods<br>
+                    <strong>⭐ Why Choose:</strong> Emotional precision</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Cultural Audio Prompting -->
+        <div class="slide">
+            <h2>Mastering Cultural Audio Prompts</h2>
+            <div class="morning-box">
+                <h3>🎯 Effective Prompt Structure</h3>
+                <div class="demo-code">
+[Cultural Style] + [Instruments] + [Mood/Energy] + [Tempo] + [Scene Context]
+
+Example:
+"Traditional Caribbean calypso with steel drums and maracas, 
+joyful and celebratory, medium tempo, background music for 
+Anansi introducing himself to the forest animals"
+                </div>
+            </div>
+            <div class="afternoon-box">
+                <h3>🎨 Caribbean Musical Elements</h3>
+                <ul>
+                    <li><strong>Instruments:</strong> Steel pan, conga drums, maracas, guitar, vocals</li>
+                    <li><strong>Rhythms:</strong> Calypso, soca, reggae, steel band</li>
+                    <li><strong>Moods:</strong> Tropical, relaxed, celebratory, mystical, adventurous</li>
+                    <li><strong>Tempos:</strong> Laid-back (80-100 BPM), medium (100-120), energetic (120-140)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 8: Scene-Specific Prompt Examples -->
+        <div class="slide">
+            <h2>Scene-Specific Audio Prompts</h2>
+            <div class="prompt-examples">
+                <div class="prompt-card">
+                    <div class="difficulty-badge easy">Character Theme</div>
+                    <h3>🕷️ Anansi's Theme</h3>
+                    <p><em>"Playful Caribbean melody with steel drums, clever and mischievous mood, medium tempo, representing the trickster spider Anansi"</em></p>
+                </div>
+                <div class="prompt-card">
+                    <div class="difficulty-badge easy">Character Theme</div>
+                    <h3>🐒 Monkeys' Theme</h3>
+                    <p><em>"Light Caribbean percussion with maracas and bongos, curious and innocent mood, upbeat tempo, representing playful vervet monkeys"</em></p>
+                </div>
+                <div class="prompt-card">
+                    <div class="difficulty-badge medium">Environment</div>
+                    <h3>🌴 Tropical Forest</h3>
+                    <p><em>"Ambient Caribbean nature sounds with distant steel drums, peaceful and mystical, slow tempo, background for tropical rainforest scenes"</em></p>
+                </div>
+                <div class="prompt-card">
+                    <div class="difficulty-badge medium">Action Scene</div>
+                    <h3>🎭 The Trick Revealed</h3>
+                    <p><em>"Dramatic Caribbean music with building steel drums, suspenseful and surprising, accelerating tempo, for the moment of revelation"</em></p>
+                </div>
+                <div class="prompt-card">
+                    <div class="difficulty-badge hard">Full Scene</div>
+                    <h3>🏝️ Departure from Island</h3>
+                    <p><em>"Triumphant Caribbean calypso with full steel band, victorious and celebratory, medium-fast tempo, monkeys leaving St. Kitts successfully"</em></p>
+                </div>
+                <div class="prompt-card">
+                    <div class="difficulty-badge hard">Emotional</div>
+                    <h3>🌅 Cultural Heritage</h3>
+                    <p><em>"Traditional St. Kitts folk music with authentic instruments, proud and nostalgic, moderate tempo, celebrating island culture and history"</em></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Break Time -->
+        <div class="slide">
+            <h2>☕ Break Time!</h2>
+            <div class="activity-box">
+                <h3>15 Minutes to Recharge</h3>
+                <p>Grab a drink and think about the different moods in your cultural story</p>
+            </div>
+            <p><strong>When we return:</strong> Hands-on audio creation workshop!</p>
+        </div>
+
+        <!-- Slide 10: Hands-On Audio Creation -->
+        <div class="slide">
+            <h2>Hands-On: Create Your Audio Collection</h2>
+            <div class="activity-box">
+                <h3>🎵 Audio Creation Sprint (90 minutes)</h3>
+                <p><strong>Your mission:</strong> Create all audio elements for your cultural story</p>
+                <ul>
+                    <li><strong>Character Themes (2-3):</strong> Musical identity for main characters</li>
+                    <li><strong>Scene Background Music (3-5):</strong> Atmosphere for each major scene</li>
+                    <li><strong>Environmental Sounds (2-3):</strong> Location audio and ambience</li>
+                    <li><strong>Action/Transition Sounds (3-4):</strong> Scene changes and dramatic moments</li>
+                    <li><strong>Cultural Heritage Track (1):</strong> Authentic traditional music</li>
+                </ul>
+            </div>
+            <div class="morning-box">
+                <p><strong>Goal:</strong> 12-15 audio elements ready for video integration</p>
+            </div>
+        </div>
+
+        <!-- Slide 11: Platform Strategy Workshop -->
+        <div class="slide">
+            <h2>Platform Strategy Workshop</h2>
+            <div class="sound-categories">
+                <div class="sound-category">
+                    <h3>🎯 Use Udio For:</h3>
+                    <ul>
+                        <li>Main background music tracks</li>
+                        <li>Character theme songs</li>
+                        <li>Cultural heritage music</li>
+                        <li>High-quality final compositions</li>
+                    </ul>
+                </div>
+                <div class="sound-category">
+                    <h3>🎛️ Use Mureka For:</h3>
+                    <ul>
+                        <li>Precise instrument control</li>
+                        <li>Layered compositions</li>
+                        <li>Custom sound effects</li>
+                        <li>Technical experimentation</li>
+                    </ul>
+                </div>
+                <div class="sound-category">
+                    <h3>🔥 Use Riffusion For:</h3>
+                    <ul>
+                        <li>Quick concept testing</li>
+                        <li>Musical sketches and ideas</li>
+                        <li>Transition sounds</li>
+                        <li>Rapid prototyping</li>
+                    </ul>
+                </div>
+                <div class="sound-category">
+                    <h3>🎹 Use Suno For:</h3>
+                    <ul>
+                        <li>Songs with vocals</li>
+                        <li>Complete song structures</li>
+                        <li>Narrative audio</li>
+                        <li>Cultural singing/chanting</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12: Advanced Prompting Techniques -->
+        <div class="slide">
+            <h2>Advanced Audio Prompting Techniques</h2>
+            <div class="morning-box">
+                <h3>🎯 Professional Prompt Elements</h3>
+                <div class="demo-code">
+Advanced Prompt Template:
+"[Genre/Style] music with [specific instruments], [mood adjectives], 
+[tempo description], [energy level], [cultural context], 
+[scene purpose], [duration if needed], [audio quality notes]"
+
+Example:
+"Atmospheric Caribbean ambient music with steel drums and nature sounds, 
+mysterious and enchanting, slow building tempo, medium energy, 
+traditional St. Kitts forest setting, background for Anansi's magical entrance, 
+45 seconds, cinematic quality"
+                </div>
+            </div>
+            <div class="afternoon-box">
+                <h3>💡 Pro Tips for Better Results</h3>
+                <ul>
+                    <li><strong>Be specific about instruments:</strong> "Steel pan" vs "drums"</li>
+                    <li><strong>Include emotional context:</strong> "Playful but with underlying wisdom"</li>
+                    <li><strong>Reference film styles:</strong> "Like a Disney animated movie soundtrack"</li>
+                    <li><strong>Mention cultural authenticity:</strong> "Traditional Caribbean style"</li>
+                    <li><strong>Add technical specs:</strong> "Medium tempo, 120 BPM, loopable"</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 13: Cultural Audio Research -->
+        <div class="slide">
+            <h2>Cultural Audio Research Workshop</h2>
+            <div class="activity-box">
+                <h3>🌍 Authenticity Research (20 minutes)</h3>
+                <p><strong>Before creating, research your cultural elements:</strong></p>
+                <ul>
+                    <li><strong>Traditional Instruments:</strong> What instruments are authentic to your culture?</li>
+                    <li><strong>Musical Styles:</strong> Calypso, soca, reggae, folk - which fits your story?</li>
+                    <li><strong>Rhythmic Patterns:</strong> What makes Caribbean music distinctive?</li>
+                    <li><strong>Cultural Context:</strong> How is music used in your cultural celebrations?</li>
+                    <li><strong>Modern Interpretations:</strong> How do contemporary artists honor tradition?</li>
+                </ul>
+            </div>
+            <div class="morning-box">
+                <h3>🎼 St. Kitts & Nevis Musical Heritage</h3>
+                <ul>
+                    <li><strong>Steel Pan:</strong> Primary instrument, various pitches and tones</li>
+                    <li><strong>Calypso:</strong> Storytelling through music, social commentary</li>
+                    <li><strong>String Bands:</strong> Guitar, banjo, violin combinations</li>
+                    <li><strong>Carnival Music:</strong> Energetic, participatory, celebratory</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 14: Audio Organization System -->
+        <div class="slide">
+            <h2>Professional Audio Organization</h2>
+            <div class="demo-code">
+📁 PROJECT AUDIO FOLDER STRUCTURE:
+
+📂 Cultural_Audio_Project/
+├── 📂 01_Character_Themes/
+│   ├── Anansi_Theme_Mischievous.mp3
+│   ├── Monkeys_Theme_Playful.mp3
+│   └── Island_Spirit_Mystical.mp3
+├── 📂 02_Background_Music/
+│   ├── Forest_Ambient_Peaceful.mp3
+│   ├── Adventure_Building_Energy.mp3
+│   └── Resolution_Triumphant.mp3
+├── 📂 03_Environmental_Sounds/
+│   ├── Tropical_Forest_Nature.mp3
+│   ├── Ocean_Waves_Distant.mp3
+│   └── Marketplace_Activity.mp3
+├── 📂 04_Action_SFX/
+│   ├── Magic_Sparkle_Effect.mp3
+│   ├── Surprise_Revelation.mp3
+│   └── Movement_Transition.mp3
+└── 📂 05_Cultural_Heritage/
+    ├── Traditional_Steel_Pan.mp3
+    ├── Folk_Celebration.mp3
+    └── Heritage_Pride.mp3
+            </div>
+            <div class="afternoon-box">
+                <h3>📝 Audio Documentation Template</h3>
+                <p>For each audio file, document:</p>
+                <ul>
+                    <li><strong>Purpose:</strong> What scene/moment is this for?</li>
+                    <li><strong>Duration:</strong> How long is the track?</li>
+                    <li><strong>Mood:</strong> What emotion does it convey?</li>
+                    <li><strong>Platform:</strong> Which AI tool was used?</li>
+                    <li><strong>Prompt:</strong> Save the exact prompt used</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 15: Character Theme Creation -->
+        <div class="slide">
+            <h2>Character Theme Creation Workshop</h2>
+            <div class="sound-categories">
+                <div class="sound-category">
+                    <h3>🕷️ Anansi Character Profile</h3>
+                    <ul>
+                        <li><strong>Personality:</strong> Clever, mischievous, wise</li>
+                        <li><strong>Musical Style:</strong> Playful but sophisticated</li>
+                        <li><strong>Instruments:</strong> Steel pan lead, light percussion</li>
+                        <li><strong>Tempo:</strong> Medium, with unexpected rhythmic changes</li>
+                        <li><strong>Mood:</strong> Curious, slightly mysterious, ultimately helpful</li>
+                    </ul>
+                </div>
+                <div class="sound-category">
+                    <h3>🐒 Vervet Monkeys Profile</h3>
+                    <ul>
+                        <li><strong>Personality:</strong> Innocent, curious, trusting</li>
+                        <li><strong>Musical Style:</strong> Light, bouncy, cheerful</li>
+                        <li><strong>Instruments:</strong> Maracas, bongos, light guitar</li>
+                        <li><strong>Tempo:</strong> Upbeat and energetic</li>
+                        <li><strong>Mood:</strong> Playful, optimistic, slightly naive</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="activity-box">
+                <h3>🎵 Character Theme Challenge (30 minutes)</h3>
+                <p>Create 2-3 distinct character themes that capture personality through music!</p>
+            </div>
+        </div>
+
+        <!-- Slide 16: Environmental Sound Design -->
+        <div class="slide">
+            <h2>Environmental Sound Design</h2>
+            <div class="platform-grid">
+                <div class="platform-card best">
+                    <h3>🌴 Tropical Forest</h3>
+                    <p><strong>Elements:</strong> Bird calls, rustling leaves, distant water<br>
+                    <strong>Mood:</strong> Peaceful, natural, alive<br>
+                    <strong>Prompt:</strong> "Tropical Caribbean forest ambience with exotic birds..."</p>
+                </div>
+                <div class="platform-card best">
+                    <h3>🌊 Coastal Scenes</h3>
+                    <p><strong>Elements:</strong> Gentle waves, seabirds, breeze<br>
+                    <strong>Mood:</strong> Relaxing, expansive, freedom<br>
+                    <strong>Prompt:</strong> "Caribbean ocean waves with tropical breeze..."</p>
+                </div>
+                <div class="platform-card good">
+                    <h3>🏘️ Village/Community</h3>
+                    <p><strong>Elements:</strong> Distant voices, activity, life<br>
+                    <strong>Mood:</strong> Warm, social, welcoming<br>
+                    <strong>Prompt:</strong> "Caribbean village atmosphere with community sounds..."</p>
+                </div>
+                <div class="platform-card good">
+                    <h3>🌙 Mystical Moments</h3>
+                    <p><strong>Elements:</strong> Ethereal tones, magic sparkles<br>
+                    <strong>Mood:</strong> Mysterious, spiritual, transformative<br>
+                    <strong>Prompt:</strong> "Magical Caribbean atmosphere with mystical elements..."</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 17: Lunch Break -->
+        <div class="slide">
+            <h2>🍽️ Lunch Break</h2>
+            <div class="activity-box">
+                <h3>1 Hour to Recharge</h3>
+                <p>Enjoy your meal and listen to Caribbean music for inspiration!</p>
+            </div>
+            <p><strong>When we return:</strong> Advanced audio creation and scene-specific composition</p>
+        </div>
+
+        <!-- Slide 18: Afternoon: Scene-Specific Audio Creation -->
+        <div class="slide">
+            <h2>Afternoon: Scene-Specific Audio Creation</h2>
+            <div class="workshop-title">Bringing Every Scene to Life</div>
+            <div class="afternoon-box">
+                <h3>🎬 This Afternoon's Goals</h3>
+                <ul>
+                    <li><strong>Scene Mapping:</strong> Audio plan for each visual scene</li>
+                    <li><strong>Mood Progression:</strong> Musical journey through your story</li>
+                    <li><strong>Cultural Integration:</strong> Authentic elements in every track</li>
+                    <li><strong>Technical Polish:</strong> Professional quality and timing</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 19: Scene-by-Scene Audio Planning -->
+        <div class="slide">
+            <h2>Scene-by-Scene Audio Planning</h2>
+            <div class="audio-storyboard">
+                <div class="storyboard-panel">
+                    <strong>Scene 1: Introduction</strong><br>
+                    Character themes + environment
+                </div>
+                <div class="storyboard-panel">
+                    <strong>Scene 2: Conflict Setup</strong><br>
+                    Building tension music
+                </div>
+                <div class="storyboard-panel">
+                    <strong>Scene 3: The Plan</strong><br>
+                    Mischievous, plotting themes
+                </div>
+                <div class="storyboard-panel">
+                    <strong>Scene 4: Action/Journey</strong><br>
+                    Adventure music, movement
+                </div>
+                <div class="storyboard-panel">
+                    <strong>Scene 5: Revelation</strong><br>
+                    Dramatic, surprise audio
+                </div>
+                <div class="storyboard-panel">
+                    <strong>Scene 6: Resolution</strong><br>
+                    Triumphant, cultural celebration
+                </div>
+            </div>
+            <div class="activity-box">
+                <h3>🎯 Scene Audio Workshop (45 minutes)</h3>
+                <p>Create specific audio for each scene in your visual storyboard</p>
+            </div>
+        </div>
+
+        <!-- Slide 20: Emotional Audio Progression -->
+        <div class="slide">
+            <h2>Emotional Audio Progression</h2>
+            <div class="morning-box">
+                <h3>🎭 The Emotional Journey</h3>
+                <p>Your audio should guide viewers through an emotional story arc:</p>
+                <div class="demo-code">
+Scene 1: CURIOUS (Light, questioning music)
+    ↓
+Scene 2: CONCERNED (Slightly tense, uncertain)
+    ↓  
+Scene 3: HOPEFUL (Anansi's clever plan, building energy)
+    ↓
+Scene 4: ADVENTUROUS (Journey music, movement, excitement)
+    ↓
+Scene 5: SURPRISED (Revelation moment, dramatic shift)
+    ↓
+Scene 6: TRIUMPHANT (Success, celebration, cultural pride)
+                </div>
+            </div>
+            <div class="afternoon-box">
+                <h3>🎚️ Technical Audio Progression</h3>
+                <ul>
+                    <li><strong>Tempo:</strong> Slow → Medium → Fast → Very Fast → Medium → Celebratory</li>
+                    <li><strong>Volume:</strong> Soft → Building → Peak → Drop → Grand Finale</li>
+                    <li><strong>Instruments:</strong> Simple → Complex → Full Orchestra Feel</li>
+                    <li><strong>Cultural Elements:</strong> Subtle → Prominent → Fully Authentic</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 21: Advanced Platform Techniques -->
+        <div class="slide">
+            <h2>Advanced Platform Techniques</h2>
+            <div class="sound-categories">
+                <div class="sound-category">
+                    <h3>🎵 Udio Advanced Tips</h3>
+                    <ul>
+                        <li><strong>Extend tracks:</strong> Use the extend feature for longer compositions</li>
+                        <li><strong>Remix variations:</strong> Create multiple versions of the same theme</li>
+                        <li><strong>Stem separation:</strong> Download individual instrument tracks</li>
+                        <li><strong>Consistent style:</strong> Reference previous generations for cohesion</li>
+                    </ul>
+                </div>
+                <div class="sound-category">
+                    <h3>🎛️ Mureka Precision Control</h3>
+                    <ul>
+                        <li><strong>Layer building:</strong> Start simple, add complexity</li>
+                        <li><strong>Instrument focus:</strong> Highlight specific Caribbean instruments</li>
+                        <li><strong>Rhythm patterns:</strong> Use traditional Caribbean rhythmic structures</li>
+                        <li><strong>Mix control:</strong> Balance levels between instruments</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 22: Quality Control Checklist -->
+        <div class="slide">
+            <h2>Audio Quality Control Checklist</h2>
+            <div class="platform-grid">
+                <div class="platform-card best">
+                    <h3>✅ Cultural Authenticity</h3>
+                    <ul>
+                        <li>Uses appropriate Caribbean instruments</li>
+                        <li>Respects traditional musical styles</li>
+                        <li>Avoids cultural stereotypes</li>
+                        <li>Celebrates heritage positively</li>
+                    </ul>
+                </div>
+                <div class="platform-card best">
+                    <h3>✅ Technical Quality</h3>
+                    <ul>
+                        <li>Clear, professional sound quality</li>
+                        <li>Appropriate volume levels</li>
+                        <li>No audio clipping or distortion</li>
+                        <li>Consistent audio format (.mp3 or .wav)</li>
+                    </ul>
+                </div>
+                <div class="platform-card good">
+                    <h3>✅ Story Integration</h3>
+                    <ul>
+                        <li>Matches the mood of each scene</li>
+                        <li>Supports visual storytelling</li>
+                        <li>Creates emotional progression</li>
+                        <li>Enhances cultural narrative</li>
+                    </ul>
+                </div>
+                <div class="platform-card good">
+                    <h3>✅ Practical Considerations</h3>
+                    <ul>
+                        <li>Appropriate duration for each scene</li>
+                        <li>Can loop smoothly if needed</li>
+                        <li>Downloads saved and organized</li>
+                        <li>Prompts documented for future reference</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 23: Final Audio Production Sprint -->
+        <div class="slide">
+            <h2>Final Audio Production Sprint</h2>
+            <div class="activity-box">
+                <h3>🚀 Complete Your Audio Library (60 minutes)</h3>
+                <p><strong>Sprint Goals:</strong></p>
+                <ul>
+                    <li><strong>Finish all scene audio:</strong> Complete any missing musical elements</li>
+                    <li><strong>Create variations:</strong> Alternative versions for different energy levels</li>
+                    <li><strong>Polish and perfect:</strong> Use extend features and refinements</li>
+                    <li><strong>Organize professionally:</strong> Proper file naming and folder structure</li>
+                    <li><strong>Document everything:</strong> Save prompts and creation notes</li>
+                    <li><strong>Test scene integration:</strong> Imagine audio with your visuals</li>
+                </ul>
+            </div>
+            <div class="morning-box">
+                <p><strong>Success Metric:</strong> Complete audio library ready for multimedia integration</p>
+            </div>
+        </div>
+
+        <!-- Slide 24: Audio Showcase & Peer Review -->
+        <div class="slide">
+            <h2>Audio Showcase & Peer Review</h2>
+            <div class="activity-box">
+                <h3>🎵 Cultural Audio Gallery (45 minutes)</h3>
+                <p><strong>Showcase Format:</strong></p>
+                <ul>
+                    <li><strong>3 minutes per student:</strong> Play your top 3-4 audio pieces</li>
+                    <li><strong>Scene context:</strong> Explain which scene each audio supports</li>
+                    <li><strong>Cultural significance:</strong> How does it represent your heritage?</li>
+                    <li><strong>Platform choice:</strong> Why you chose specific AI tools</li>
+                    <li><strong>Creative challenges:</strong> What was difficult? What worked well?</li>
+                </ul>
+            </div>
+            <div class="afternoon-box">
+                <p><strong>Peer Review Focus:</strong> Cultural authenticity, audio quality, scene appropriateness</p>
+            </div>
+        </div>
+
+        <!-- Slide 25: Integration Planning -->
+        <div class="slide">
+            <h2>Preparing for Multimedia Integration</h2>
+            <div class="sound-categories">
+                <div class="sound-category">
+                    <h3>🎬 Video-Audio Sync Planning</h3>
+                    <ul>
+                        <li><strong>Timing considerations:</strong> Audio length vs video length</li>
+                        <li><strong>Transition planning:</strong> How audio moves between scenes</li>
+                        <li><strong>Volume balancing:</strong> Background music vs dialogue/narration</li>
+                        <li><strong>Loop points:</strong> Where music can repeat seamlessly</li>
+                    </ul>
+                </div>
+                <div class="sound-category">
+                    <h3>📱 Technical Integration</h3>
+                    <ul>
+                        <li><strong>File formats:</strong> .mp3 for web, .wav for editing</li>
+                        <li><strong>Compression:</strong> Optimize file sizes for web use</li>
+                        <li><strong>Volume normalization:</strong> Consistent levels across tracks</li>
+                        <li><strong>Backup strategy:</strong> Save originals and compressed versions</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="activity-box">
+                <h3>📋 Integration Checklist</h3>
+                <p>Prepare detailed notes for how each audio element will be used in your final multimedia presentation</p>
+            </div>
+        </div>
+
+        <!-- Slide 26: Day Complete & Next Steps -->
+        <div class="slide">
+            <h2>Day 8 Complete: Audio Mastery Achieved!</h2>
+            <div class="workshop-title">Professional Sound Design Portfolio</div>
+            <div class="morning-box">
+                <h3>🏆 What You've Accomplished</h3>
+                <ul>
+                    <li>Created complete audio storyboard for your cultural project</li>
+                    <li>Mastered 4+ professional AI music platforms</li>
+                    <li>Generated 12-15 high-quality audio elements</li>
+                    <li>Developed cultural audio authenticity skills</li>
+                    <li>Built professional audio organization system</li>
+                    <li>Planned seamless video-audio integration</li>
+                </ul>
+            </div>
+            <div class="afternoon-box">
+                <h3>📂 Your Complete Audio Library</h3>
+                <ul>
+                    <li><strong>Character Themes:</strong> Musical identity for main characters</li>
+                    <li><strong>Scene Music:</strong> Background atmosphere for each scene</li>
+                    <li><strong>Environmental Audio:</strong> Location authenticity and immersion</li>
+                    <li><strong>Action Sounds:</strong> Transitions and dramatic moments</li>
+                    <li><strong>Cultural Heritage:</strong> Authentic traditional music elements</li>
+                </ul>
+            </div>
+            <div class="activity-box">
+                <p><strong>Next Week:</strong> We'll integrate all your audio with video to create professional multimedia presentations that celebrate Caribbean culture through cutting-edge technology! 🎵🎬✨</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <div class="nav-controls">
+            <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)">← Previous</button>
+            <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">Next →</button>
+        </div>
+        <div class="slide-grid">
+            <div class="slide-dot active" onclick="goToSlide(0)" title="Welcome">1</div>
+            <div class="slide-dot" onclick="goToSlide(1)" title="Journey Update">2</div>
+            <div class="slide-dot" onclick="goToSlide(2)" title="Why Audio Storyboards">3</div>
+            <div class="slide-dot" onclick="goToSlide(3)" title="Framework">4</div>
+            <div class="slide-dot" onclick="goToSlide(4)" title="Audio Types">5</div>
+            <div class="slide-dot" onclick="goToSlide(5)" title="Best Platforms">6</div>
+            <div class="slide-dot" onclick="goToSlide(6)" title="Cultural Prompting">7</div>
+            <div class="slide-dot" onclick="goToSlide(7)" title="Scene Prompts">8</div>
+            <div class="slide-dot" onclick="goToSlide(8)" title="Break">9</div>
+            <div class="slide-dot" onclick="goToSlide(9)" title="Audio Creation">10</div>
+            <div class="slide-dot" onclick="goToSlide(10)" title="Platform Strategy">11</div>
+            <div class="slide-dot" onclick="goToSlide(11)" title="Advanced Prompting">12</div>
+            <div class="slide-dot" onclick="goToSlide(12)" title="Cultural Research">13</div>
+            <div class="slide-dot" onclick="goToSlide(13)" title="Organization">14</div>
+            <div class="slide-dot" onclick="goToSlide(14)" title="Character Themes">15</div>
+            <div class="slide-dot" onclick="goToSlide(15)" title="Environmental">16</div>
+            <div class="slide-dot" onclick="goToSlide(16)" title="Lunch">17</div>
+            <div class="slide-dot" onclick="goToSlide(17)" title="Afternoon">18</div>
+            <div class="slide-dot" onclick="goToSlide(18)" title="Scene Planning">19</div>
+            <div class="slide-dot" onclick="goToSlide(19)" title="Emotional Progression">20</div>
+            <div class="slide-dot" onclick="goToSlide(20)" title="Advanced Techniques">21</div>
+            <div class="slide-dot" onclick="goToSlide(21)" title="Quality Control">22</div>
+            <div class="slide-dot" onclick="goToSlide(22)" title="Final Sprint">23</div>
+            <div class="slide-dot" onclick="goToSlide(23)" title="Showcase">24</div>
+            <div class="slide-dot" onclick="goToSlide(24)" title="Integration">25</div>
+            <div class="slide-dot" onclick="goToSlide(25)" title="Complete">26</div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const totalSlides = 26;
+
+        const timeSchedule = [
+            "9:00 AM", "9:10 AM", "9:20 AM", "9:30 AM", "9:45 AM", "10:00 AM", "10:15 AM", 
+            "10:30 AM", "10:45 AM", "11:00 AM", "11:15 AM", "11:30 AM", "11:45 AM", "12:00 PM", 
+            "12:15 PM", "12:30 PM", "12:00 PM", "1:00 PM", "1:15 PM", "1:30 PM", "1:45 PM", 
+            "2:00 PM", "2:15 PM", "2:45 PM", "3:15 PM", "3:45 PM"
+        ];
+
+        function updateSlideDisplay() {
+            const slides = document.querySelectorAll('.slide');
+            const dots = document.querySelectorAll('.slide-dot');
+            
+            slides.forEach((slide, index) => {
+                slide.classList.toggle('active', index === currentSlide);
+            });
+            
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentSlide);
+            });
+            
+            document.getElementById('slideCounter').textContent = `${currentSlide + 1} / ${totalSlides}`;
+            document.getElementById('timeIndicator').textContent = timeSchedule[currentSlide] || "4:00 PM";
+            
+            const progressPercentage = ((currentSlide + 1) / totalSlides) * 100;
+            document.getElementById('progressFill').style.width = `${progressPercentage}%`;
+            
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+        }
+
+        function changeSlide(direction) {
+            const newSlide = currentSlide + direction;
+            if (newSlide >= 0 && newSlide < totalSlides) {
+                currentSlide = newSlide;
+                updateSlideDisplay();
+            }
+        }
+
+        function goToSlide(slideIndex) {
+            if (slideIndex >= 0 && slideIndex < totalSlides) {
+                currentSlide = slideIndex;
+                updateSlideDisplay();
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            switch(event.key) {
+                case 'ArrowLeft':
+                case 'ArrowUp':
+                    changeSlide(-1);
+                    break;
+                case 'ArrowRight':
+                case 'ArrowDown':
+                case ' ':
+                    event.preventDefault();
+                    changeSlide(1);
+                    break;
+                case 'Home':
+                    goToSlide(0);
+                    break;
+                case 'End':
+                    goToSlide(totalSlides - 1);
+                    break;
+            }
+        });
+
+        // Touch/swipe support for mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', function(event) {
+            touchStartX = event.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', function(event) {
+            touchEndX = event.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                changeSlide(1); // Swipe left - next slide
+            }
+            if (touchEndX > touchStartX + 50) {
+                changeSlide(-1); // Swipe right - previous slide
+            }
+        }
+
+        // Initialize
+        updateSlideDisplay();
+    </script>
+</body>
+</html>
